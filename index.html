@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>此刻 · 当前时间</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f1e6;
+      --ink: #21302e;
+      --accent: #2f9e8f;
+      --muted: #7c8a87;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+      /* 顶部一抹晨光白，让浅底更通透 */
+      background-image: radial-gradient(130% 120% at 50% -12%, #fffdf7 0%, var(--bg) 58%);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .stage {
+      width: 100%;
+      max-width: 720px;
+      text-align: center;
+      animation: rise 0.8s ease-out both;
+    }
+
+    .eyebrow {
+      font-family: var(--sans);
+      font-weight: 400;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 1.4rem;
+    }
+
+    .clock {
+      font-family: var(--mono);
+      font-weight: 300;
+      font-size: clamp(3.4rem, 16vw, 8.5rem);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      gap: 0.05em;
+      color: var(--ink);
+    }
+
+    .clock .seg { display: inline-block; min-width: 1.6ch; }
+    .clock .colon { color: var(--accent); font-weight: 300; }
+    .clock .sec { color: var(--accent); font-weight: 500; }
+
+    .meta {
+      margin-top: 1.6rem;
+      font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+      color: var(--ink);
+      letter-spacing: 0.02em;
+    }
+    .meta .weekday { color: var(--accent); }
+
+    .progress {
+      margin: 2.2rem auto 0;
+      width: min(280px, 70vw);
+      height: 2px;
+      background: rgba(33, 48, 46, 0.10);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.4s linear;
+    }
+
+    .footnote {
+      margin-top: 2.4rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .stage { animation: none; }
+      .progress > i { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <p class="eyebrow">此刻</p>
+
+    <div class="clock" id="clock" aria-live="off" aria-label="当前时间">
+      <span class="seg" id="hh">--</span><span class="colon">:</span><span class="seg" id="mm">--</span><span class="colon">:</span><span class="seg sec" id="ss">--</span>
+    </div>
+
+    <p class="meta">
+      <span id="date">——</span>
+      <span class="weekday" id="weekday"></span>
+    </p>
+
+    <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+
+    <p class="footnote" id="zone"></p>
+  </main>
+
+  <script>
+    const pad = (n) => String(n).padStart(2, "0");
+
+    const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+
+    const el = {
+      hh: document.getElementById("hh"),
+      mm: document.getElementById("mm"),
+      ss: document.getElementById("ss"),
+      date: document.getElementById("date"),
+      weekday: document.getElementById("weekday"),
+      bar: document.getElementById("bar"),
+      zone: document.getElementById("zone"),
+    };
+
+    function tick() {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const s = now.getSeconds();
+
+      el.hh.textContent = pad(h);
+      el.mm.textContent = pad(m);
+      el.ss.textContent = pad(s);
+
+      el.date.textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+      el.weekday.textContent = " " + weekdays[now.getDay()];
+
+      el.bar.style.width = ((s + now.getMilliseconds() / 1000) / 60 * 100).toFixed(2) + "%";
+    }
+
+    // 时区说明（用本地时区缩写）
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      el.zone.textContent = tz ? tz : "";
+    } catch (e) {
+      el.zone.textContent = "";
+    }
+
+    tick();
+    // 对齐到整秒，减少初始跳变
+    const delay = 1000 - (Date.now() % 1000);
+    setTimeout(() => {
+      tick();
+      setInterval(tick, 1000);
+    }, delay);
+  </script>
+</body>
+</html>
