@@ -163,13 +163,8 @@
       el.bar.style.width = ((s + now.getMilliseconds() / 1000) / 60 * 100).toFixed(2) + "%";
     }
 
-    // 时区说明（用本地时区缩写）
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      el.zone.textContent = tz ? tz : "";
-    } catch (e) {
-      el.zone.textContent = "";
-    }
+    // 时区说明
+    el.zone.textContent = "Cherish Time";
 
     tick();
     // 对齐到整秒，减少初始跳变
